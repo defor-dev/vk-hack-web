@@ -8,10 +8,10 @@ import edit from '../img/edit.svg';
 import './place.css';
 
 
-const Basket = ({ match: { params: { areaId, itemId }}, foodAreas, order }) => {
-  const [ faster, setFaster ] = useState(true);
-  const [ time, setTime ] = useState('');
-  const [ selfService, setSelfService ] = useState(false);
+const Basket = ({ match: { params: { areaId, itemId }}, foodAreas, order, basketStatus, setupBasketStatus }) => {
+  const [ faster, setFaster ] = useState((basketStatus[itemId]) ? basketStatus[itemId].faster : true);
+  const [ time, setTime ] = useState((basketStatus[itemId]) ? basketStatus[itemId].time : '');
+  const [ selfService, setSelfService ] = useState((basketStatus[itemId]) ? basketStatus[itemId].selfService : false);
   const area = foodAreas.filter(area => area.id === areaId)[0];
   const item = area.items.filter(item => item.id === itemId)[0];
 
@@ -129,6 +129,7 @@ const Basket = ({ match: { params: { areaId, itemId }}, foodAreas, order }) => {
             onChange={event => {
               setFaster(false);
               setTime(event.target.value.replace(/[^0-9]/g, '')); // fixed #2
+              setupBasketStatus({ itemId, faster, time, selfService });
             }}
             onBlur={() => {
               if (time) {
@@ -139,15 +140,29 @@ const Basket = ({ match: { params: { areaId, itemId }}, foodAreas, order }) => {
         </div>
         <div className="Place__choice-item">
           <h3>С собой</h3>
-          <Checkbox checked={selfService} onToggle={() => setSelfService(!selfService)} />
+          <Checkbox
+              checked={selfService}
+              onToggle={() => {
+            setSelfService(!selfService);
+            setupBasketStatus({ itemId, faster, time, selfService });
+          }}
+          />
         </div>
         <div className="Place__choice-item">
           <h3>На месте</h3>
-          <Checkbox checked={!selfService} onToggle={() => setSelfService(!setSelfService)} />
+          <Checkbox
+              checked={!selfService}
+              onToggle={() =>{
+                setSelfService(!setSelfService);
+                setupBasketStatus({ itemId, faster, time, selfService });
+              }}
+          />
         </div>
       </div>
       <footer className="Place__footer">
-        <Link to={`/order/${area.id}/${item.id}`} className="Place__order">
+        <Link to={`/order/${area.id}/${item.id}`} className="Place__order" onClick={() => {
+          setupBasketStatus({itemId, faster, time, selfService})
+        }}>
           Оплатить {price}
         </Link>
       </footer>
